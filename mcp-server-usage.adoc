@@ -1,0 +1,252 @@
+
+ifdef::env-site[]
+include::partial$_attributes.adoc[]
+endif::[]
+
+:imagesdir: ../images
+
+= Model Context Protocol (MCP) Servers for OneCX Development
+
+MCP servers allow AI assistants, such as Copilot in Agent mode, to access external tools and documentation sources.  
+This improves the accuracy and usefulness of AI-generated responses when working with OneCX projects.
+
+[#recommended-servers]
+== Recommended MCP Servers
+
+The following MCP servers are recommended for OneCX development.
+
+[source,json]
+----
+{
+  "npm-sentinel": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["-y", "@nekzus/mcp-server@latest"]
+  },
+  "onecx-docs-mcp": {
+    "url": "https://onecx-docs-ai-dev.dev.one-cx.org/mcp",
+    "type": "http"
+  },
+  "io.github.ChromeDevTools/chrome-devtools-mcp": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["chrome-devtools-mcp@latest"]
+  },
+  "primeng": {
+    "command": "npx",
+    "args": ["-y", "@primeng/mcp"]
+  }
+}
+----
+
+[#onecx-docs-mcp]
+=== OneCX Docs MCP
+
+Purpose::
+Provides AI tools with direct access to the OneCX documentation.
+
+Why use it::
+
+Allows AI assistants to retrieve information about OneCX architecture, APIs, and configuration patterns.  
+This is useful when working with OneCX widgets, Angular integration interfaces, shell and workspace features, or other platform APIs.
+
+Example prompt::
+
+[source,text]
+----
+ask onecx: how does workspace routing work in OneCX?
+----
+
+[#primeng-mcp]
+=== PrimeNG MCP
+
+Purpose::
+Provides documentation and usage guidance for PrimeNG components.
+
+Why use it::
+
+Most OneCX frontend applications use PrimeNG.  
+This MCP allows AI assistants to retrieve component documentation, suggest correct usage patterns, and generate configuration examples.
+
+Typical use cases::
+
+Building UI components, configuring PrimeNG tables, and implementing filters or forms.
+
+Example prompt::
+
+[source,text]
+----
+how do I implement column filtering in a PrimeNG table?
+----
+
+[#chrome-devtools-mcp]
+=== Chrome DevTools MCP
+
+Purpose::
+Allows AI assistants to interact with Chrome DevTools.
+
+Why use it::
+
+Useful for debugging frontend applications by inspecting DOM elements, analysing network requests, investigating runtime errors, and running performance traces.
+
+Example prompts::
+
+[source,text]
+----
+Check why images on localhost:8080 are not loading.
+----
+
+[source,text]
+----
+Inspect the page layout on localhost:4200 and identify CSS issues.
+----
+
+[source,text]
+----
+Analyze the performance of localhost:4200.
+----
+
+[#npm-sentinel-mcp]
+=== npm Sentinel MCP
+
+Purpose::
+Provides metadata and security information for npm packages.
+
+Why use it::
+
+Helps ensure dependencies are safe, maintained, and compatible when evaluating new packages or reviewing existing project dependencies.
+
+Example prompt::
+
+[source,text]
+----
+check if the package primeng has known vulnerabilities
+----
+
+[#setup-vscode]
+== Setting Up MCP Servers in VS Code
+
+MCP servers can be registered through the VS Code MCP integration.
+
+=== Add MCP Server
+
+. Open the Command Palette
++
+[source,text]
+----
+CTRL + Shift + P
+----
+
+. Run the command
++
+[source,text]
+----
+MCP: Add server...
+----
+
+. Select the server type
++
+[source,text]
+----
+HTTP
+----
+
+. Enter the server URL
++
+[source,text]
+----
+https://onecx-docs-ai-dev.dev.one-cx.org/mcp
+----
+
+. Choose where the configuration should be stored
+
+Global::
+Stores the MCP configuration in the local VS Code environment.
+
+Remote (WSL)::
+Stores the configuration inside the WSL environment.
+
++
+[NOTE]
+====
+Adding the server as *Global* usually works for both the host and WSL environments.
+====
+
+[#using-mcp]
+== Using MCP Servers with Copilot
+
+When using Copilot in *Agent mode*, MCP servers can be triggered automatically based on the prompt.
+
+Example:
+
+[source,text]
+----
+ask onecx: how does workspace routing work in OneCX?
+----
+
+You can also control which MCP tools are available using the *Configure tools* option in the Copilot chat interface.
+
+[#limiting-tools]
+== Limiting MCP Tools
+
+Using too many MCP tools may reduce response quality and increase execution overhead.  
+Enable only the tools required for the current task.
+
+[#tool-combinations]
+=== Recommended Tool Combinations
+
+Angular and OneCX development::
+
+* onecx-docs-mcp
+* primeng
+* npm-sentinel
+
+UI debugging::
+
+* chrome-devtools-mcp
+* primeng
+
+Dependency analysis::
+
+* npm-sentinel
+
+Selecting a smaller set of tools helps the AI focus on relevant sources.
+
+[#certificate-issues]
+== Resolving Certificate Issues
+
+[WARNING]
+====
+If `TypeError: fetch failed` appears, this is usually caused by certificate issues when using Zscaler in WSL.
+====
+
+=== Step 1 — Export the Certificate Chain
+
+. Open https://onecx-docs-ai-dev.dev.one-cx.org/mcp[OneCX Docs MCP server]
+. Click the settings icon next to the URL
+. Select *Connection is secure*
+. Select *Certificate is valid*
+. Export all certificates from the certificate hierarchy
+
+=== Step 2 — Install Certificates in WSL
+
+. Copy the certificates to
++
+[source,bash]
+----
+/usr/local/share/ca-certificates/
+----
+
+. Run
++
+[source,bash]
+----
+sudo update-ca-certificates
+----
+
+This registers the certificates inside WSL and resolves the connection issue.
+
+[TIP]
+====
+If you still experience connection issues after installing the certificates, add the MCP server to the *Remote (WSL)* configuration instead of the *Global* configuration.
+====
